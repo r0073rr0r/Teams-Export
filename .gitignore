@@ -1,0 +1,33 @@
+# --- Private data: NEVER on GitHub ---
+# ignore the CONTENTS of export/, but keep the empty folder (.gitkeep)
+/export/*
+!/export/.gitkeep
+
+# secrets
+.env
+
+# safety net: no cache copy, database, log or dump anywhere should ever be committed
+*.ldb
+*.log
+*.db
+*.sqlite
+*.leveldb/
+*.indexeddb.*
+MANIFEST-*
+CURRENT
+LOCK
+teams_messages*.txt
+teams_log*.jsonl
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# build / packaging / test artifacts
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.eggs/

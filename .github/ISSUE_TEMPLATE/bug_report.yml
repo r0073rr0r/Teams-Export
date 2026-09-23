@@ -1,0 +1,79 @@
+name: 🐛 Bug report
+description: Report a problem with Teams-Export
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report!
+        ⚠️ **Do not paste real messages, names, e-mail addresses, credentials or `.env` contents.** Redact anything private.
+  - type: checkboxes
+    id: prechecks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I am running this against **my own** Teams data on **my own** machine.
+          required: true
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I ran `python teams.py doctor` and reviewed the output.
+          required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Which command?
+      options:
+        - export
+        - doctor
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Which account type?
+      options:
+        - personal (private Microsoft account, teams.live.com)
+        - work (work/school account, teams.microsoft.com)
+        - both
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `python teams.py ...`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output / error (redacted)
+      description: Paste the relevant console output. Remove any private data.
+      render: shell
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.x"
+    validations:
+      required: true
+  - type: input
+    id: teams
+    attributes:
+      label: Teams version
+      placeholder: "Teams → Settings → About Teams, e.g. 25xxx.xxxx.xxxx.xxxx"
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: "e.g. Windows 11 24H2"

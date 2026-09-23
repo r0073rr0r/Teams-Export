@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teams-export"
+version = "1.0.0"
+description = "Read and export your own Microsoft Teams (new Teams / Teams 2.x) chat history from the local cache on your own Windows PC."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "r0073rr0r" }]
+keywords = ["teams", "microsoft-teams", "msteams", "indexeddb", "leveldb", "export", "forensics"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Communications :: Chat",
+]
+dependencies = [
+    "ccl_chromium_reader @ git+https://github.com/cclgroupltd/ccl_chromium_reader",
+    "python-snappy",
+]
+
+[project.optional-dependencies]
+dev = ["pylint==4.0.8", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/r0073rr0r/Teams-Export"
+Issues = "https://github.com/r0073rr0r/Teams-Export/issues"
+
+[project.scripts]
+teams-export = "teams:main"
+
+[tool.setuptools]
+py-modules = ["teams"]
+packages = ["teamskit"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
