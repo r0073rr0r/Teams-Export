@@ -107,7 +107,7 @@ Log format:
 ```
 
 A reply shows the quoted message first, prefixed with `> `. `(edited)` marks an edited
-message, `[👍2 ❤️1]` a reaction summary (unknown reactions show as `(name)`).
+message, `[👍2 ❤️1]` a reaction summary (reactions with no known emoji show as `(name)`).
 
 ## 🧰 All methods
 

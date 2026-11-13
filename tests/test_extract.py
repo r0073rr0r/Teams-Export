@@ -35,6 +35,19 @@ def test_build_events_group_chat_and_deleted():
     assert sorted(e["text"] for e in ev) == ["[deleted]", "hi"]
 
 
+def test_build_events_decodes_one_byte_string_content():
+    # V8 one-byte (Latin-1) strings come back from the reader as bytes; they must not be dropped.
+    ev = extract.build_events([_msg(content=b"<p>it\xb4s\xa0here</p>")], {}, {}, set(), "personal")
+    assert ev[0]["text"] == "it´s here"
+
+
+def test_build_events_names_chat_from_members_when_only_i_wrote():
+    mine = _msg(conversationId="19:solo", isSentByCurrentUser=True, creator="8:me", imDisplayName="Me")
+    members = {"19:solo": ["8:me", "8:live:bob", "8:skypeuser"]}
+    ev = extract.build_events([mine], {"8:live:bob": "Bob Example"}, {}, set(), "personal", members)
+    assert ev[0]["peer"] == "8:skypeuser, Bob Example" and ev[0]["direction"] == "OUT"
+
+
 def test_format_line_and_filter_since():
     e = {"time": "2026-09-23 10:00:00", "direction": "OUT", "is_group": False, "peer": "Alice Example",
          "author": "Me", "text": "line one\nline two", "edited": True, "reactions": "👍1"}

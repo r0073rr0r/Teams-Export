@@ -63,12 +63,19 @@ def test_call_transcript_and_album():
 def test_files_and_reactions_from_properties():
     props = {"files": '[{"fileName": "a.pdf"}, {"title": "b.jpg"}]',
              "emotions": [{"key": "like", "users": [{"mri": "x"}, {"mri": "y"}]}, {"key": "heart", "users": []},
-                          {"key": "yes-tone2", "users": [{"mri": "z"}]}, {"key": "party", "users": [{"mri": "z"}]},
+                          {"key": "yes-tone2", "users": [{"mri": "z"}]}, {"key": "headbang", "users": [{"mri": "z"}]},
                           {"key": "reactionsConsumptionHorizon", "users": [{"mri": "z"}]}]}
     assert render.files_from_properties(props) == ["a.pdf", "b.jpg"]
-    assert render.reactions_from_properties(props) == "👍3 (party)1"
+    assert render.reactions_from_properties(props) == "👍3 (headbang)1"
     assert not render.files_from_properties({"files": "not json"})
     assert render.reactions_from_properties({}) == ""
+    coded = {"emotions": [{"key": "1f440_eyes", "users": [{"mri": "x"}]},
+                          {"key": "2705_whiteheavycheckmark", "users": [{"mri": "y"}]}]}
+    assert render.reactions_from_properties(coded) == "👀1 ✅1"
+
+
+def test_json_array_body_is_a_system_item():
+    assert render.render("RichText", '[{"articleID": 1}]') == "[system item]"
 
 
 def test_plain_unescapes_topics():

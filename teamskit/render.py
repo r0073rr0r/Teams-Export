@@ -100,7 +100,7 @@ def render(message_type, content, names=None):
     if message_type == "RichText/Media_Album" and not content.strip():
         return "[album]"
     stripped = content.lstrip()
-    if stripped.startswith("{") or stripped.startswith("{\\"):
+    if stripped.startswith(("{", "[{")):
         try:
             json.loads(stripped)
             return "[system item]"
@@ -127,13 +127,18 @@ def files_from_properties(props):
 REACTION_EMOJI = {
     "like": "👍", "yes": "👍", "heart": "❤️", "laugh": "😆", "surprised": "😮", "cry": "😢",
     "sad": "😢", "angry": "😠", "cwl": "😂", "facepalm": "🤦", "bow": "🙇", "sarcastic": "😏",
-    "2714_heavycheckmark": "✔️", "xmasyes": "👍",
+    "2714_heavycheckmark": "✔️", "xmasyes": "👍", "smile": "🙂", "party": "🎉", "ok": "👌", "rock": "🤘",
+    "handsinair": "🙌", "rofl": "🤣", "dance": "💃", "xmasheart": "❤️", "heartyellow": "💛",
 }
+_CODEPOINT_KEY = re.compile(r"^([0-9a-f]{4,6})_", re.I)
 
 
 def _reaction_label(key):
     base = key.split("-tone")[0]
-    return REACTION_EMOJI.get(base, f"({key})")
+    if base in REACTION_EMOJI:
+        return REACTION_EMOJI[base]
+    cp = _CODEPOINT_KEY.match(base)  # newer keys carry the code point: 1f440_eyes, 2705_whiteheavycheckmark
+    return chr(int(cp.group(1), 16)) if cp else f"({key})"
 
 
 def reactions_from_properties(props):

@@ -39,7 +39,8 @@ def cmd_doctor(a):
     for p in config.PROFILES:
         d = config.leveldb_dir(p)
         size = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d)) if os.path.isdir(d) else 0
-        print(f"  {p:8s} cache : {'%.1f MB' % (size / 1048576) if size else '(empty / not found)'}")
+        shown = '%.1f MB' % (size / 1048576) if size >= 1048576 else '%d KB (practically empty)' % (size // 1024)
+        print(f"  {p:8s} cache : {shown if size else '(empty / not found)'}")
     print(f"  export dir     : {config.EXPORT_DIR}")
     for mod in ("ccl_chromium_reader", "snappy"):
         try:

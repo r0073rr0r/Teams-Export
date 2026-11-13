@@ -14,7 +14,15 @@ GROUP_THREAD_TYPES = ("topic", "space", "meeting", "chat")
 
 
 def _s(v):
+    """A string field. V8 stores pure Latin-1 strings as one-byte strings, which the reader
+    returns as bytes (e.g. a message body containing only ASCII + a non-breaking space)."""
+    if isinstance(v, bytes):
+        return v.decode("latin-1")
     return v if isinstance(v, str) else ""
+
+
+def _list(v):
+    return v if isinstance(v, list) else []
 
 
 def _version(m):
@@ -63,15 +71,27 @@ def _raw_messages(w):
                 yield m
 
 
-def build_events(messages, names, topics, group_ids, profile):
-    """Turn raw message dicts into log events. Pure: no cache access, unit-tested."""
+def build_events(messages, names, topics, group_ids, profile, members=None):
+    """Turn raw message dicts into log events. Pure: no cache access, unit-tested.
+
+    `members` maps a conversation id to its member MRIs; it names chats in which only you wrote."""
     # 1:1 chats have no topic: name them after the other participant(s) seen in the chat.
-    others = {}
+    others, me = {}, set()
     for m in messages:
-        if not m.get("isSentByCurrentUser"):
-            who = _s(m.get("imDisplayName")) or names.get(m.get("creator"), "")
-            if who:
-                others.setdefault(m.get("conversationId"), set()).add(who)
+        if m.get("isSentByCurrentUser"):
+            me.add(_s(m.get("creator")))
+            continue
+        who = _s(m.get("imDisplayName")) or names.get(m.get("creator"), "") or _s(m.get("creator"))
+        if who:
+            others.setdefault(m.get("conversationId"), set()).add(who)
+
+    def peer(conv):
+        if topics.get(conv):
+            return topics[conv]
+        if others.get(conv):
+            return ", ".join(sorted(others[conv]))
+        rest = [x for x in (members or {}).get(conv, ()) if x not in me]
+        return ", ".join(sorted(names.get(x) or x for x in rest)) or _s(conv)
 
     events = []
     for m in messages:
@@ -93,7 +113,7 @@ def build_events(messages, names, topics, group_ids, profile):
             "time": datetime.datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d %H:%M:%S"),
             "direction": "OUT" if m.get("isSentByCurrentUser") else "IN",
             "is_group": conv in group_ids or bool(topics.get(conv)),
-            "peer": topics.get(conv) or ", ".join(sorted(others.get(conv, []))) or _s(conv),
+            "peer": peer(conv),
             "author": _s(m.get("imDisplayName")) or names.get(m.get("creator"), "") or _s(m.get("creator")),
             "kind": _s(m.get("messageType")),
             "text": text,
@@ -110,14 +130,21 @@ def run(snapshot, profile):
     from ccl_chromium_reader import ccl_chromium_indexeddb as idb
     w = idb.WrappedIndexDB(snapshot, None)
 
-    names = {p["mri"]: p["displayName"] for p in _live(_db(w, "Teams:profiles"), "profiles")
+    names = {_s(p.get("mri")): _s(p.get("displayName")) for p in _live(_db(w, "Teams:profiles"), "profiles")
              if _s(p.get("mri")) and _s(p.get("displayName"))}
 
-    topics, group_ids = {}, set()
+    topics, group_ids, members = {}, set(), {}
     for c in _live(_db(w, "Teams:conversation-manager"), "conversations"):
+        cid = c.get("id")
         tp = c.get("threadProperties") if isinstance(c.get("threadProperties"), dict) else {}
-        topics[c.get("id")] = render.plain(_s(tp.get("topic")))
+        topics[cid] = render.plain(_s(tp.get("topic")))
         if _s(tp.get("threadType")) in GROUP_THREAD_TYPES and _s(tp.get("topic")):
-            group_ids.add(c.get("id"))
+            group_ids.add(cid)
+        members[cid] = [_s(x.get("id")) for x in _list(c.get("members")) if isinstance(x, dict) and _s(x.get("id"))]
+        # The chat list keeps names of people missing from Teams:profiles (e.g. old Skype contacts).
+        title = c.get("chatTitle") if isinstance(c.get("chatTitle"), dict) else {}
+        for u in _list(title.get("avatarUsersInfo")):
+            if isinstance(u, dict) and _s(u.get("mri")) and _s(u.get("displayName")):
+                names.setdefault(_s(u.get("mri")), _s(u.get("displayName")))
 
-    return build_events(pick_latest(_raw_messages(w)), names, topics, group_ids, profile)
+    return build_events(pick_latest(_raw_messages(w)), names, topics, group_ids, profile, members)
