@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pylint==4.0.8", "pytest"]
+dev = ["pylint==4.0.9", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/r0073rr0r/Teams-Export"
